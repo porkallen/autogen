@@ -66,18 +66,20 @@ else
 fi
 
 # Path to license file will be computed from LICENSE_NAME below.
-LICENSE_NAME="apache"
+LICENSE_NAME="occipital"
 LICENSE_FILE=""
-COPYRIGHT_HOLDER="Google LLC"
+CUR_FILE_NAME=""
+COPYRIGHT_HOLDER="Occipital, Inc."
 YEAR="${YEAR:-$(date +%Y)}"
-MODIFY_FILE_INPLACE=0
+MODIFY_FILE_INPLACE=1
 SILENT=0
 ADD_CODE=1
 ADD_RUNLINE=1
 function printLicenseWithYear() {
   cat "${LICENSE_FILE}" \
     | sed "s/%YEAR%/${YEAR}/" \
-    | sed "s/%COPYRIGHT_HOLDER%/${COPYRIGHT_HOLDER}/"
+    | sed "s/%COPYRIGHT_HOLDER%/${COPYRIGHT_HOLDER}/" \
+    | sed "s/%CUR_FILE_NAME%/${CUR_FILE_NAME}/"
 }
 
 function printLicenseNonHashComment() {
@@ -109,7 +111,7 @@ function prependToFileInPlace() {
 }
 
 SEPARATE_LICENSE_FROM_TODO="blank"
-TOP_LEVEL_COMMENT=1
+TOP_LEVEL_COMMENT=0
 readonly TODO_COMMENT="TODO: High-level file comment."
 
 function printFileCommentTemplate() {
@@ -296,6 +298,9 @@ case "${LICENSE_NAME}" in
   mpl | mpl2 | mpl-2 | mpl2.0 | mpl-2.0)
     LICENSE_FILE="${SRCDIR}/licenses/mpl-2.0.txt"
     ;;
+  occipital)
+    LICENSE_FILE="${SRCDIR}/licenses/occipital.txt"
+    ;;
   *)
     echo "Invalid license selected: ${LICENSE_NAME}" >&2
     exit 1
@@ -311,7 +316,9 @@ declare -r FILE="$1"
 # Args:
 #   $1: filename
 function autogenForFile() {
+  
   local file="$1"
+  CUR_FILE_NAME="$(basename -- $file)"
   case "${file}" in
 
     *.bat)
@@ -325,9 +332,9 @@ function autogenForFile() {
 
     # TODO(mbrukman): in some projects, *.h are actually C++ files where users
     # want to use C++ style "//" comments. How can we handle this flexibility?
-    *.c | *.h | *.css | *.scss)
+    *.c | *.cpp |*.h | *.css | *.scss)
       echo "/*"
-      printLicenseNonHashComment " *"
+      printLicenseNonHashComment "   "
       echo " */"
       echo
       if [ ${TOP_LEVEL_COMMENT} -eq 1 ]; then
@@ -336,10 +343,10 @@ function autogenForFile() {
       fi
       ;;
 
-    *.cc | *.cpp | *.cs | *.dart | *.go | *.hh | *.hpp | *.java | *.js | *.jsx | *.ts | *.tsx | *.m | *.mm | *.proto | *.rs | *.scala | *.swift)
-      printLicenseNonHashComment "//"
-      printFileCommentTemplate "//"
-      ;;
+    #*.cc | *.cpp | *.cs | *.dart | *.go | *.hh | *.hpp | *.java | *.js | *.jsx | *.ts | *.tsx | *.m | *.mm | *.proto | *.rs | *.scala | *.swift)
+    #  printLicenseNonHashComment "//"
+    #  printFileCommentTemplate "//"
+    #  ;;
 
     *.el | .emacs | *.lisp)
       printLicenseNonHashComment ";;"
@@ -561,8 +568,13 @@ EOF
 }
 
 if [[ "${MODIFY_FILE_INPLACE}" -eq 1 ]]; then
+  if grep -q 'Copyright ©' $1; then
+      exit 0
+  fi
   autogenForFile "${FILE}" | prependToFileInPlace "${FILE}"
   exit $?
 else
   autogenForFile "${FILE}"
 fi
+
+
