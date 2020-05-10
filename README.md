@@ -34,7 +34,7 @@ autogen -i [...other params as above...]
 Bulk update many existing files in-place:
 
 ```bash
-find . -type f -name \*.sh -exec autogen -i --no-top-level-comment [options...] {} \;
+find . -type f \( -name "*.cpp" -o -name "*.c" -o -name "*.h" \) -exec autogen -i --no-top-level-comment [options...] {} \;
 ```
 
 The flag `--no-top-level-comment` avoids adding a comment such as:
